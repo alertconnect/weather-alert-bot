@@ -1,10 +1,11 @@
 const config = require('../config/config');
 const Telegraf = require('telegraf');
-const Extra = require('telegraf/extra');
+const logger = require('../utils/logger');
 
 const bot = new Telegraf(config.botToken);
 
 const sendMessage = async (id, content) => {
+  logger.info(`New message sended on group with id ${id}`)
   await bot.telegram.sendMessage(
     id,
     content
@@ -12,6 +13,7 @@ const sendMessage = async (id, content) => {
 }
 
 const sendMdMessage = async (id, content) => {
+  logger.info(`New message sended on group with id ${id}`)
   await bot.telegram.sendMessage(
     id,
     content,

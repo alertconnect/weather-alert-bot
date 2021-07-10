@@ -1,25 +1,27 @@
 const moment = require('moment');
+const axios = require('axios');
+const config = require('../config/config');
+const logger = require('../utils/logger');
 
 const botService = require('../services/bot.service')
-const alertService = require('../services/alert.service')
 
 const createChat = async (msg, prefix) => {
   const geoloc = msg.text.replace(`${prefix}setup `, '')
-  await mongoose.model('Chat').updateOne({chatId: msg.chat.id}, {
+  logger.info(`Chat created for group with id ${msg.chat.id}`, {
+    chat: msg.chat
+  })
+  await axios.put(`${config.apiBaseUrl}/group/${msg.chat.id}`, {
     chatId: msg.chat.id,
     title: msg.chat.title || msg.chat.username,
+    lastAlert: new Date(),
     geo: geoloc,
-    type: msg.chat.type || ''
-  }, {
-    upsert: true,
-    new: true,
-    setDefaultsOnInsert: true,
+    type: msg.chat.type || '',
   })
 }
 
 const alertMessageParsed = async (alert) => {
   let message
-  if (alert.size > 0) {
+  if (alert.length > 0) {
     message = `🚨 *SITUAZIONE ATTUALE DI ALLERTA SUL TERRITORIO* 🚨
 
 `
@@ -60,21 +62,22 @@ Le informazioni sono raccolte dal sistema di DPC-Bollettini-Criticita-Idrogeolog
 }
 
 const findChat = async (id) => {
-  return mongoose.model('Chat').findOne({ chatId: id });
+  return await axios.get(`${config.apiBaseUrl}/group/${id}`)
 }
 
 const findAllChat = async () => {
-  return mongoose.model('Chat').find({});
+  return await axios.get(`${config.apiBaseUrl}/group`)
 }
 
 const sendUpdates = async () => {
   const chats = await findAllChat()
 
-  for (const chat of chats) {
-    const alert = await alertService.findCurrentAlert(chat.geo)
-    if (alert.size > 0) {
+  console.log(chats.data)
+  for (const chat of chats.data.groups) {
+    const alert = await axios.get(`${config.apiBaseUrl}/alert?geo=${chat.geo}`)
+    if (alert.result.size > 0) {
       console.log(alert)
-      const message = await alertMessageParsed(alert)
+      const message = await alertMessageParsed(alert.result)
 
       await botService.sendMdMessage(
         chat.chatId,

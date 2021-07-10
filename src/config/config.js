@@ -15,6 +15,7 @@ const envVarsSchema = Joi.object()
     LOG_FILE_NAME: Joi.string().default('weather-alert-bot'),
     AUTH_SOURCE: Joi.string().default('element').optional(),
     RECONNECT_INTERVAL: Joi.number().default(1000),
+    API_BASE_URL: Joi.string().required(),
   })
   .unknown();
 
@@ -32,4 +33,5 @@ module.exports = {
   botToken: envVars.BOT_TOKEN,
   logFileName: envVars.LOG_FILE_NAME,
   reconnectInterval: envVars.RECONNECT_INTERVAL,
+  apiBaseUrl: envVars.API_BASE_URL,
 };

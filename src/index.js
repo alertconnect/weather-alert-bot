@@ -1,78 +1,22 @@
 require('dotenv').config();
 const config = require('./config/config');
 const Telegraf = require('telegraf');
-const job = require('./cron')
-const dowloadService = require('./services/download.service')
-const chatService = require('./services/chat.service')
-const botService = require('./services/bot.service')
-const alertService = require('./services/alert.service')
-const mongoose = require('mongoose');
-require("./models/chat.model");
+const chatService = require('./services/chat.service');
+const botService = require('./services/bot.service');
+const axios = require('axios');
+const job = require('./cron');
+const logger = require('./utils/logger');
 
-mongoose.Promise = Promise;
 const prefix = "!";
 
-const dbUrl = `mongodb://${config.dbHost}:${config.dbPort}/${config.database}`;
-const CONNECT_OPTIONS = {
-  auto_reconnect: true,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-  keepAlive: true,
-  keepAliveInitialDelay: config.reconnectInterval,
-};
-
-
-function connect() {
-  if (config.user.length || config.password.length) {
-    CONNECT_OPTIONS.auth = config.auth;
-    console.info('Authentication active', {
-      user: config.user,
-    });
-  }
-
-  mongoose.connect(dbUrl, CONNECT_OPTIONS).catch((e) => {
-    console.error(e);
-  });
-}
-
-const db = mongoose.connection;
-
-db.on('connecting', () => {
-  console.info('Connecting to MongoDB', {
-    uri: dbUrl,
-  });
-});
-
-db.on('connected', () => {
-  console.info('Connected to MongoDB!');
-});
-
-db.once('open', () => {
-  console.debug('MongoDB connection opened!');
-});
-
-db.on('reconnected', () => {
-  console.info('MongoDB reconnected');
-});
-
-db.on('disconnected', () => {
-  console.warn(
-    `MongoDB disconnected! Retry in ${config.reconnectInterval / 1000}s...`,
-  );
-  setTimeout(() => connect(), config.reconnectInterval);
-});
-
-connect()
-
-job.eventJob()
-
 const bot = new Telegraf(config.botToken);
+
+job.eventJob();
 
 bot.on('text', async (ctx) => {
   const msg = ctx.message
   if(msg.text.startsWith(`${prefix}setup`)) {
-
+    logger.info(`Setup requested by ${msg.from.id} on group ${msg.chat.id}`);
     const geoloc = msg.text.replace(`${prefix}setup `, '')
     if (geoloc === '' || geoloc === `${prefix}setup`) {
       await botService.sendMessage(msg.chat.id, 'geoloc assente')
@@ -87,9 +31,15 @@ nel gruppo con id *${msg.chat.id}* verrà mandato un recap giornaliero in caso d
   }
 
   if(msg.text.startsWith(`${prefix}info`)) {
+    logger.info(`Info requested by ${msg.from.id} on group ${msg.chat.id}`);
     const chat = await chatService.findChat(msg.chat.id)
-    const alert = await alertService.findCurrentAlert(chat.geo)
-    const message = await chatService.alertMessageParsed(alert)
+    console.log(chat.data.geo)
+    const alert = await axios.get(`${config.apiBaseUrl}/alert`, {
+      params: {
+        geo: chat.data.geo
+      }
+    })
+    const message = await chatService.alertMessageParsed(alert.data.result)
 
     await botService.sendMdMessage(
       msg.chat.id,
@@ -98,8 +48,8 @@ nel gruppo con id *${msg.chat.id}* verrà mandato un recap giornaliero in caso d
   }
 
   if(msg.text.startsWith(`${prefix}force-update`)) {
-    console.log('update requested')
-    await dowloadService.downloadLatestZip()
+    logger.info(`Force update command requested by ${msg.from.id}`);
+    await axios.post(`${config.apiBaseUrl}/alert/refresh`)
     await botService.sendMessage(
       msg.chat.id,
       'Aggiornamento dei record effettuato con successo!'
