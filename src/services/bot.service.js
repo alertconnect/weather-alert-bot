@@ -21,7 +21,7 @@ const sendMdMessage = async (id, content) => {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Bollettini criticita', url: `https://github.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica` }]
+          [{ text: 'Bollettino criticita', url: `https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita` }]
         ]
       }
     }

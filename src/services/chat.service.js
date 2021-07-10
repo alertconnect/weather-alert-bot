@@ -1,7 +1,8 @@
-const moment = require('moment');
 const axios = require('axios');
 const config = require('../config/config');
 const logger = require('../utils/logger');
+const moment = require('moment');
+moment.locale('it');
 
 const botService = require('../services/bot.service')
 
@@ -22,11 +23,13 @@ const createChat = async (msg, prefix) => {
 const alertMessageParsed = async (alert) => {
   let message
   if (alert.length > 0) {
-    message = `🚨 *SITUAZIONE ATTUALE DI ALLERTA SUL TERRITORIO* 🚨
+    message = `🚨 *NUOVA ALLERTA SUL TERRITORIO* 🚨
+
+Il Dipartimento della Protezione Civile ha emesso un'allerta nell'area attualmente monitorata *${alert[0].geo}* (${alert[0].description}), per 
 
 `
     for (const event of alert) {
-      message = message.concat(`⚠️ ${eventType(event.type)}
+      message = message.concat(`${eventType(event.type)}
 *${event.severity === 'Severe' ? '🔴 Allerta Rossa' : '🟠 Allerta Arancione'}*
 *🕒 Inizio*: ${moment(event.onset).format('DD/MM/yyyy HH:mm')}
 *🕡 Termine*: ${moment(event.expires).format('DD/MM/yyyy HH:mm')}
@@ -35,27 +38,21 @@ const alertMessageParsed = async (alert) => {
     }
 
     message = message.concat(`
-*Zona di monitoraggio*: ${alert[0].description} - ${alert[0].geo}
 *Ultimo aggiornamento*: ${moment(alert[0].sendedAt).format('DD/MM/yyyy HH:mm')}
 
-Le informazioni sono raccolte dal sistema di DPC-Bollettini-Criticita-Idrogeologica-Idraulica della Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile 
+Ulteriori dettagli su: ⤵️
 `)
   } else {
-    message = `*SITUAZIONE ATTUALE DI ALLERTA SUL TERRITORIO*
+    message = `*SITUAZIONE SUL TERRITORIO*
 
-✳️ Rischio temporali
-🟢 Allerta Verde
+Il Dipartimento della Protezione Civile non ha emesso allerte nell'area attualmente monitorata
 
-✳️ Rischio idrogeologico
-🟢 Allerta Verde
+🟢 Rischio temporali
+🟢 Rischio idrogeologico
+🟢 Rischio idraulico
 
-✳️️ Rischio idraulico
-🟢 Allerta Verde
-
-Zona di monitoraggio: 
-Ultimo aggiornamento: 
-
-Le informazioni sono raccolte dal sistema di DPC-Bollettini-Criticita-Idrogeologica-Idraulica della Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile`
+Ulteriori dettagli su: ⤵️
+`
   }
 
   return message
@@ -71,31 +68,28 @@ const findAllChat = async () => {
 
 const sendUpdates = async () => {
   const chats = await findAllChat()
-
-  console.log(chats.data)
   for (const chat of chats.data.groups) {
     const alert = await axios.get(`${config.apiBaseUrl}/alert?geo=${chat.geo}`)
-    if (alert.result.size > 0) {
-      console.log(alert)
-      const message = await alertMessageParsed(alert.result)
-
+    if (alert.data.result.length > 0) {
+      logger.info(`New alert available for groups ${chat.chatId} with geo ${chat.geo}, sended ${alert.data.result.length} alert`)
+      const message = await alertMessageParsed(alert.data.result)
       await botService.sendMdMessage(
         chat.chatId,
         message
       )
     }else {
-      console.log(`${chat.geo} no alert disponibili`)
+      logger.info(`No alert available for groups ${chat.chatId} with geo ${chat.geo}`)
     }
   }
 }
 
 const eventType = (event) => {
   if(event === 'hydro') {
-    return 'Rischio *idraulico*'
+    return '⚠️ Rischio *idraulico*'
   } else if(event === 'geo') {
-    return 'Rischio *idrogeologico*'
+    return '⚠️ Rischio *idrogeologico*'
   } else if(event === 'storm') {
-    return 'Rischio *temporali*'
+    return '⚠️ Rischio *temporali*'
   } else {
     return 'error'
   }

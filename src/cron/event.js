@@ -1,22 +1,24 @@
 const cron = require('node-cron');
 const chatService = require('../services/chat.service');
+const logger = require('../utils/logger');
 
 /**
  * Send message on all groups with alert
  */
 function sendAlertUpdates() {
   cron.schedule(
-    '*/5 * * * *',
+    '0 17 * * *',
     () => {
-      console.log('debug', 'starting task: sendUpdates');
+      logger.debug(`Task scheduled: sendUpdates`);
       chatService
         .sendUpdates()
         .then(() => {
-          console.log('info', 'task completed: sendUpdates');
+          logger.info(`Task completed: sendUpdates`);
         })
         .catch((error) => {
-          console.log('error', 'task failed: sendUpdates');
-          console.error(error);
+          logger.error(`Task failed: sendUpdates`, {
+            error
+          });
         });
     },
     {

@@ -33,7 +33,6 @@ nel gruppo con id *${msg.chat.id}* verrà mandato un recap giornaliero in caso d
   if(msg.text.startsWith(`${prefix}info`)) {
     logger.info(`Info requested by ${msg.from.id} on group ${msg.chat.id}`);
     const chat = await chatService.findChat(msg.chat.id)
-    console.log(chat.data.geo)
     const alert = await axios.get(`${config.apiBaseUrl}/alert`, {
       params: {
         geo: chat.data.geo
