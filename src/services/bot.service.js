@@ -28,7 +28,19 @@ const sendMdMessage = async (id, content) => {
   )
 }
 
+const sendHTMLMessage = async (id, content) => {
+  logger.info(`New message sended on group with id ${id}`)
+  await bot.telegram.sendMessage(
+    id,
+    content,
+    {
+      parse_mode: 'HTML'
+    }
+  )
+}
+
 module.exports = {
   sendMessage,
-  sendMdMessage
+  sendMdMessage,
+  sendHTMLMessage
 };

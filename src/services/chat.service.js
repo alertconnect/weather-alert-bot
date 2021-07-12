@@ -6,8 +6,7 @@ moment.locale('it');
 
 const botService = require('../services/bot.service')
 
-const createChat = async (msg, prefix) => {
-  const geoloc = msg.text.replace(`${prefix}setup `, '')
+const createChat = async (msg, geoloc) => {
   logger.info(`Chat created for group with id ${msg.chat.id}`, {
     chat: msg.chat
   })
@@ -18,6 +17,10 @@ const createChat = async (msg, prefix) => {
     geo: geoloc,
     type: msg.chat.type || '',
   })
+}
+
+const deleteChat = async (msg) => {
+  await axios.delete(`${config.apiBaseUrl}/group/${msg.chat.id}`)
 }
 
 const alertMessageParsed = async (alert) => {
@@ -97,6 +100,7 @@ const eventType = (event) => {
 
 module.exports = {
   createChat,
+  deleteChat,
   findChat,
   alertMessageParsed,
   sendUpdates,
