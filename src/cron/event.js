@@ -7,7 +7,7 @@ const logger = require('../utils/logger');
  */
 function sendAlertUpdates() {
   cron.schedule(
-    '0 17 * * *',
+    '*/60 * * * *',
     () => {
       logger.debug(`Task scheduled: sendUpdates`);
       chatService
