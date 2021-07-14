@@ -63,12 +63,18 @@ bot.command('info', async (ctx) => {
   logger.info(`Info requested by ${msg.from.id} on group ${msg.chat.id}`);
   try {
     const chat = await chatService.findChat(msg.chat.id)
+
+    if(!chat.data.geo) {
+      await botService.sendHTMLMessage(msg.chat.id, 'Questa chat non è ancora stata configurata e non può fornire allerte sulla zona.\n\nUsa il comando <code>/set [GEOCODE]</code> per impostare una zona.\n<b>Ex. </b><code>/set Lomb-09</code>')
+      logger.error(`Info request throw an error for unset chat on group ${msg.chat.id}`);
+    }
+
     const alert = await axios.get(`${config.apiBaseUrl}/alert`, {
       params: {
         geo: chat.data.geo
       }
     })
-    const message = await chatService.alertMessageParsed(alert.data.result)
+    const message = await chatService.alertMessageParsed(msg.chat.id, alert.data.result)
 
     await botService.sendMdMessage(
       msg.chat.id,
