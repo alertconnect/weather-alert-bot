@@ -17,7 +17,7 @@ function sendAlertUpdates() {
         })
         .catch((error) => {
           logger.error(`Task failed: sendUpdates`, {
-            error
+            error,
           });
         });
     },
@@ -26,7 +26,6 @@ function sendAlertUpdates() {
     },
   );
 }
-
 
 module.exports = () => {
   sendAlertUpdates();
