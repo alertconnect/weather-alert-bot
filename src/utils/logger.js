@@ -1,7 +1,7 @@
 const { createLogger, format, transports } = require('winston');
 
 const { timestamp } = format;
-const LOG_FILE_NAME = process.env.LOG_FILE_NAME
+const LOG_FILE_NAME = process.env.LOG_FILE_NAME;
 require('winston-daily-rotate-file');
 
 const enumerateErrorFormat = format((info) => {
@@ -12,13 +12,15 @@ const enumerateErrorFormat = format((info) => {
 });
 
 // eslint-disable-next-line no-shadow
-const logFormat = format.printf(({ timestamp, level, message, ...metadata }) => {
-  let msg = `${timestamp} [${level}]: ${message} `;
-  if (metadata && Object.keys(metadata).length) {
-    msg += JSON.stringify(metadata);
-  }
-  return msg;
-});
+const logFormat = format.printf(
+  ({ timestamp, level, message, ...metadata }) => {
+    let msg = `${timestamp} [${level}]: ${message} `;
+    if (metadata && Object.keys(metadata).length) {
+      msg += JSON.stringify(metadata);
+    }
+    return msg;
+  },
+);
 
 const fileWriterTransport = new transports.DailyRotateFile({
   filename: `logs/${LOG_FILE_NAME}-%DATE%.log`,
@@ -28,12 +30,24 @@ const fileWriterTransport = new transports.DailyRotateFile({
   maxFiles: 10,
   level: 'info',
   json: true,
-  format: format.combine(enumerateErrorFormat(), format.uncolorize(), timestamp(), format.splat(), logFormat),
+  format: format.combine(
+    enumerateErrorFormat(),
+    format.uncolorize(),
+    timestamp(),
+    format.splat(),
+    logFormat,
+  ),
 });
 
 const logger = createLogger({
   level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
-  format: format.combine(enumerateErrorFormat(), format.colorize(), timestamp(), format.splat(), logFormat),
+  format: format.combine(
+    enumerateErrorFormat(),
+    format.colorize(),
+    timestamp(),
+    format.splat(),
+    logFormat,
+  ),
   transports: [
     new transports.Console({
       level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
