@@ -30,6 +30,20 @@ const sendHTMLMessage = async (id, content) => {
   logger.info(`New message sended on group with id ${id}`);
   await bot.telegram.sendMessage(id, content, {
     parse_mode: 'HTML',
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'OpenSource',
+            url: `https://github.com/alertconnect`,
+          },
+          {
+            text: 'Creatore',
+            url: `https://andreacw.dev/`,
+          },
+        ],
+      ],
+    },
   });
 };
 
