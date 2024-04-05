@@ -20,6 +20,11 @@ class chatController {
     );
   }
 
+  /**
+   * Send command list message
+    * @param msg
+   * @returns {Promise<void>}
+   */
   static async getCommandList(msg) {
     logger.info(`Command list requested by ${msg.from.id} on group ${msg.chat.id}`);
     await botService.sendHTMLMessage(
@@ -27,6 +32,41 @@ class chatController {
       messageHelper.getHelpCommandList(),
       false,
     );
+  }
+
+  /**
+   * Set a chat for alerts
+   * @param msg
+   * @returns {Promise<void>}
+   */
+  static async setChat(msg) {
+    const location = msg.text.replace('/set ', '');
+    logger.info(
+      `Setup requested by ${msg.from.id} on group ${msg.chat.id} with location ${location}`,
+    );
+    if (location === '') {
+      logger.info(`Location not found for group ${msg.chat.id}`);
+      await botService.sendHTMLMessage(
+        msg.chat.id,
+        messageHelper.locationNotFoundMessage(),
+      );
+    } else {
+      const sector = await sectorService.getSector(location).catch(async (err) => {
+        logger.error(`Error finding sector with code ${location}`, err);
+        await botService.sendHTMLMessage(
+          msg.chat.id,
+          messageHelper.locationNotFoundMessage(),
+        );
+      });
+      if (sector) {
+        logger.info(`Chat created for group with id ${msg.chat.id}`);
+        await chatService.createChat(msg, location);
+        await botService.sendHTMLMessage(
+          msg.chat.id,
+          messageHelper.setSuccessMessage(location, msg.chat.id),
+        );
+      }
+    }
   }
 
   /**
