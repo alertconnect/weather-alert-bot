@@ -16,6 +16,7 @@ const envVarsSchema = Joi.object()
     AUTH_SOURCE: Joi.string().default('element').optional(),
     RECONNECT_INTERVAL: Joi.number().default(1000),
     API_BASE_URL: Joi.string().required(),
+    API_AUTH_KEY: Joi.string().required(),
   })
   .unknown();
 
@@ -34,4 +35,5 @@ module.exports = {
   logFileName: envVars.LOG_FILE_NAME,
   reconnectInterval: envVars.RECONNECT_INTERVAL,
   apiBaseUrl: envVars.API_BASE_URL,
+  apiAuthKey: envVars.API_AUTH_KEY,
 };

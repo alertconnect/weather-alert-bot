@@ -1,135 +1,126 @@
 const axios = require('axios');
+const { format } = require('date-fns');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const moment = require('moment');
-moment.locale('it');
+const messageHelper = require('../utils/message.helper');
 
-const botService = require('../services/bot.service');
+axios.defaults.headers.common['X-API-KEY'] = config.apiAuthKey;
 
-const createChat = async (msg, geoloc) => {
-  logger.info(`Chat created for group with id ${msg.chat.id}`, {
-    chat: msg.chat,
-  });
-  await axios.put(`${config.apiBaseUrl}/group/${msg.chat.id}`, {
-    chatId: msg.chat.id,
-    title: msg.chat.title || msg.chat.username,
-    lastAlert: {
-      date: moment.now(),
-    },
-    geo: geoloc,
-    type: msg.chat.type || '',
-  });
-};
+class chatService {
+  /**
+   * Get all chats
+   * @returns {Promise<any|*[]>}
+   */
+  static async getAllChats() {
+    const chats = await axios.get(`${config.apiBaseUrl}/chats`);
+    return chats.data || [];
+  }
 
-const deleteChat = async (msg) => {
-  await axios.delete(`${config.apiBaseUrl}/group/${msg.chat.id}`);
-};
+  /**
+   * Find a chat by id
+   * @param {number} id
+   * @returns {Promise<axios.AxiosResponse<any>>}
+   */
+  static async findChat(id) {
+    return axios.get(`${config.apiBaseUrl}/chats/${id}`).catch((err) => {
+      logger.error(`Error finding chat with id ${id}`, err);
+    });
+  }
 
-const alertMessageParsed = async (id, alert) => {
-  let message;
-  if (alert.length > 0) {
-    await updateChatSendTime(id, alert[0].identifier);
-    message = `🚨 *NUOVA ALLERTA SUL TERRITORIO* 🚨
+  /**
+   * Create a new chat
+   * @param {Object} msg
+   * @param {String} location
+   * @returns {Promise<void>}
+   */
+  static async createChat(msg, location) {
+    logger.info(`Chat created for group with id ${msg.chat.id}`, {
+      chat: msg.chat,
+    });
+    await axios
+      .post(`${config.apiBaseUrl}/chats`, {
+        telegram_id: msg.chat.id,
+        title: msg.chat.title || msg.chat.username,
+        type: msg.chat.type || '',
+        code: location,
+        last_alert_code: 'DPC_BULLETIN_NEW_08_18_69441',
+        last_alert_date: new Date().toISOString(),
+      })
+      .catch((err) => {
+        logger.error(
+          `Error creating chat for group with id ${msg.chat.id}`,
+          err,
+        );
+      });
+  }
+
+  /**
+   * Update the last alert code for a chat
+   * @param {string} id
+   * @param {string} code
+   */
+  static async updateChat(id, code) {
+    logger.info(`Chat with id ${id} updated with last alert code ${code}`);
+    return axios
+      .put(`${config.apiBaseUrl}/chats/${id}`, {
+        last_alert_code: code,
+        last_alert_date: new Date().toISOString(),
+      })
+      .catch((err) => {
+        logger.error(`Error updating chat with id ${id}`, err);
+      });
+  }
+
+  /**
+   * Delete a chat
+   * @param {number} chatId
+   * @returns {Promise<void>}
+   */
+  static async deleteChat(chatId) {
+    await axios.delete(`${config.apiBaseUrl}/chats/${chatId}`).catch((err) => {
+      logger.error(`Error deleting chat with id ${chatId}`, err);
+    });
+  }
+
+  /**
+   * Function for the message content composition
+   * @param {Array} alert
+   * @returns {Promise<string>}
+   */
+  static async messageGeneration(alert) {
+    let message;
+    if (alert.length > 0) {
+      message = `🚨 *NUOVA ALLERTA* 🚨
 
 Il Dipartimento della Protezione Civile ha emesso ${
-      alert.length > 1 ? 'le seguenti allerte' : "un'allerta"
-    } nell'area attualmente monitorata *${alert[0].geo}* (${
-      alert[0].description
-    }),
+  alert.length > 1 ? 'le seguenti allerte' : "un'allerta"
+} nell'area attualmente monitorata *${alert[0].location_code}* (${
+  alert[0].location_desc
+}),
 
 `;
-    for (const event of alert) {
-      message = message.concat(`${eventType(event.type)}
-*${event.severity === 'Severe' ? '🔴 Allerta Rossa' : '🟠 Allerta Arancione'}*
-*🕒 Inizio*: ${moment(event.onset).format('DD/MM/yyyy HH:mm')}
-*🕡 Termine*: ${moment(event.expires).format('DD/MM/yyyy HH:mm')}
+      alert.forEach((event) => {
+        message = message.concat(`${messageHelper.eventType(event.type)}
+*${messageHelper.getAlertSeverity(event.severity)}*
+*🕒 Inizio*: ${format(new Date(event.onset), 'dd/MM/yyyy HH:mm')}
+*🕡 Termine*: ${format(new Date(event.expires), 'dd/MM/yyyy HH:mm')}
 
 `);
-    }
+      });
 
-    message = message.concat(`
-*Ultimo aggiornamento*: ${moment(alert[0].sendedAt).format('DD/MM/yyyy HH:mm')}
+      message = message.concat(`
+*Ultimo aggiornamento*: ${format(
+    new Date(alert[0].received),
+    'dd/MM/yyyy HH:mm',
+  )}
 Ulteriori dettagli su: ⤵️
 `);
-  } else {
-    message = `*SITUAZIONE SUL TERRITORIO*
-
-Il Dipartimento della Protezione Civile non ha emesso allerte nell'area attualmente monitorata
-
-🟢 Rischio temporali
-🟢 Rischio idrogeologico
-🟢 Rischio idraulico
-
-Ulteriori dettagli su: ⤵️
-`;
-  }
-
-  return message;
-};
-
-const findChat = async (id) => {
-  return await axios.get(`${config.apiBaseUrl}/group/${id}`);
-};
-
-const findAllChat = async () => {
-  return await axios.get(`${config.apiBaseUrl}/group`);
-};
-
-const updateChatSendTime = async (id, identifier) => {
-  return await axios.put(`${config.apiBaseUrl}/group/${id}`, {
-    lastAlert: {
-      date: moment.now(),
-      identifier,
-    },
-  });
-};
-
-const sendUpdates = async () => {
-  const chats = await findAllChat();
-  for (const chat of chats.data.groups) {
-    const alert = await axios.get(`${config.apiBaseUrl}/alert?geo=${chat.geo}`);
-    if (alert.data.result.length > 0) {
-      if (alert.data.result[0].identifier !== chat.lastAlert.identifier) {
-        logger.info(
-          `New alert available for groups ${chat.chatId} with geo ${chat.geo}, sended ${alert.data.result.length} alert`,
-        );
-        const message = await alertMessageParsed(
-          chat.chatId,
-          alert.data.result,
-        );
-        await botService.sendMdMessage(chat.chatId, message);
-      } else {
-        logger.info(
-          `Alert available for groups ${chat.chatId} with geo ${chat.geo} but is already sended on latest scheduled sending`,
-          {
-            current: alert.data.result[0].identifier,
-            chat: chat.lastAlert.identifier,
-          },
-        );
-      }
     } else {
-      logger.info(
-        `No alert available for groups ${chat.chatId} with geo ${chat.geo}`,
-      );
+      message = messageHelper.getAllGoodMessage();
     }
-  }
-};
 
-const eventType = (event) => {
-  if (event === 'hydro') {
-    return '⚠️ Rischio *idraulico*';
-  } else if (event === 'geo') {
-    return '⚠️ Rischio *idrogeologico*';
-  } else if (event === 'storm') {
-    return '⚠️ Rischio *temporali*';
+    return message;
   }
-  return 'error';
-};
+}
 
-module.exports = {
-  createChat,
-  deleteChat,
-  findChat,
-  alertMessageParsed,
-  sendUpdates,
-};
+module.exports = chatService;

@@ -1,5 +1,5 @@
-const config = require('../config/config');
 const Telegraf = require('telegraf');
+const config = require('../config/config');
 const logger = require('../utils/logger');
 
 const bot = new Telegraf(config.botToken);
@@ -18,7 +18,7 @@ const sendMdMessage = async (id, content) => {
         [
           {
             text: 'Bollettino criticita',
-            url: `https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita`,
+            url: 'https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita',
           },
         ],
       ],
@@ -26,10 +26,24 @@ const sendMdMessage = async (id, content) => {
   });
 };
 
-const sendHTMLMessage = async (id, content) => {
+const sendHTMLMessage = async (id, content, buttons = false) => {
   logger.info(`New message sended on group with id ${id}`);
   await bot.telegram.sendMessage(id, content, {
     parse_mode: 'HTML',
+    reply_markup: !buttons ? {} : {
+      inline_keyboard: [
+        [
+          {
+            text: 'OpenSource',
+            url: 'https://github.com/alertconnect',
+          },
+          {
+            text: 'Creatore',
+            url: 'https://andreacw.dev/',
+          },
+        ],
+      ],
+    },
   });
 };
 
