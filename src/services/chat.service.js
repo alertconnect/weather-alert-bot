@@ -1,7 +1,7 @@
 const axios = require('axios');
+const { format } = require('date-fns');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const { format } = require('date-fns');
 const messageHelper = require('../utils/message.helper');
 
 axios.defaults.headers.common['X-API-KEY'] = config.apiAuthKey;
@@ -22,7 +22,7 @@ class chatService {
    * @returns {Promise<axios.AxiosResponse<any>>}
    */
   static async findChat(id) {
-    return await axios.get(`${config.apiBaseUrl}/chats/${id}`).catch((err) => {
+    return axios.get(`${config.apiBaseUrl}/chats/${id}`).catch((err) => {
       logger.error(`Error finding chat with id ${id}`, err);
     });
   }
@@ -61,7 +61,7 @@ class chatService {
    */
   static async updateChat(id, code) {
     logger.info(`Chat with id ${id} updated with last alert code ${code}`);
-    return await axios
+    return axios
       .put(`${config.apiBaseUrl}/chats/${id}`, {
         last_alert_code: code,
         last_alert_date: new Date().toISOString(),
@@ -93,26 +93,26 @@ class chatService {
       message = `🚨 *NUOVA ALLERTA* 🚨
 
 Il Dipartimento della Protezione Civile ha emesso ${
-        alert.length > 1 ? 'le seguenti allerte' : "un'allerta"
-      } nell'area attualmente monitorata *${alert[0].location_code}* (${
-        alert[0].location_desc
-      }),
+  alert.length > 1 ? 'le seguenti allerte' : "un'allerta"
+} nell'area attualmente monitorata *${alert[0].location_code}* (${
+  alert[0].location_desc
+}),
 
 `;
-      for (const event of alert) {
+      alert.forEach((event) => {
         message = message.concat(`${messageHelper.eventType(event.type)}
 *${messageHelper.getAlertSeverity(event.severity)}*
 *🕒 Inizio*: ${format(new Date(event.onset), 'dd/MM/yyyy HH:mm')}
 *🕡 Termine*: ${format(new Date(event.expires), 'dd/MM/yyyy HH:mm')}
 
 `);
-      }
+      });
 
       message = message.concat(`
 *Ultimo aggiornamento*: ${format(
-        new Date(alert[0].received),
-        'dd/MM/yyyy HH:mm',
-      )}
+    new Date(alert[0].received),
+    'dd/MM/yyyy HH:mm',
+  )}
 Ulteriori dettagli su: ⤵️
 `);
     } else {

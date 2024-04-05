@@ -9,9 +9,9 @@ function sendAlertUpdates() {
   cron.schedule(
     '*/60 * * * *',
     () => {
-      logger.debug(`Task scheduled: sendUpdates`);
+      logger.debug('Task scheduled: sendUpdates');
       chatController.sendAlertsToChats().then(() => {
-        logger.info(`Task completed: sendAlertsToChats`);
+        logger.info('Task completed: sendAlertsToChats');
       });
     },
     {

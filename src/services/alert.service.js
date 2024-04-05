@@ -13,6 +13,14 @@ class alertService {
     const chats = await axios.get(`${config.apiBaseUrl}/alerts/${location}`);
     return chats.data || [];
   }
+
+  /**
+   * Force update on chat
+   * @returns {Promise<axios.AxiosResponse<any>>}
+   */
+  static async forceAlertsUpdate() {
+    return axios.post(`${config.apiBaseUrl}/alerts/refresh`);
+  }
 }
 
 module.exports = alertService;
