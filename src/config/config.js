@@ -17,6 +17,9 @@ const envVarsSchema = Joi.object()
     RECONNECT_INTERVAL: Joi.number().default(1000),
     API_BASE_URL: Joi.string().required(),
     API_AUTH_KEY: Joi.string().required(),
+    UPTIME_URL: Joi.string().description('Uptime API URL'),
+    UPTIME_KEY: Joi.string().description('Uptime API key'),
+    UPTIME_CHAT_TOKEN: Joi.string().description('Uptime API connect token'),
   })
   .unknown();
 
@@ -36,4 +39,9 @@ module.exports = {
   reconnectInterval: envVars.RECONNECT_INTERVAL,
   apiBaseUrl: envVars.API_BASE_URL,
   apiAuthKey: envVars.API_AUTH_KEY,
+  uptime: {
+    api: envVars.UPTIME_URL,
+    key: envVars.UPTIME_KEY,
+    chatToken: envVars.UPTIME_CHAT_TOKEN,
+  },
 };
