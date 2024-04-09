@@ -4,6 +4,10 @@ const sectorService = require('../services/sector.service');
 const botService = require('../services/bot.service');
 const messageHelper = require('../utils/message.helper');
 const logger = require('../utils/logger');
+const { pingHeartbeats } = require('../services/uptime.service');
+const config = require('../config/config');
+
+const CHAT_TOKEN = config.uptime.chatToken;
 
 class chatController {
   /**
@@ -194,6 +198,8 @@ class chatController {
         );
       }
     });
+    // Execute ping to uptime API
+    await pingHeartbeats(CHAT_TOKEN);
   }
 }
 
