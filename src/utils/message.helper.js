@@ -18,14 +18,20 @@ Ulteriori dettagli su: ⤵️
 
   /**
    * Get the alert severity
-   * @param severity
+   * @param {String} severity
    * @returns {string}
    */
   static getAlertSeverity(severity) {
-    if (severity === 'Severe') {
-      return '🔴 Allerta Rossa';
+    switch (severity) {
+      case 'Moderate':
+        return '🟡 Allerta Gialla';
+      case 'Severe':
+        return '🟠 Allerta Arancione';
+      case 'Extreme':
+        return '🔴 Allerta Rossa';
+      default:
+        return 'Allerta non classificata';
     }
-    return '🟠 Allerta Arancione';
   }
 
   /**
