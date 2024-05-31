@@ -18,14 +18,20 @@ Ulteriori dettagli su: ⤵️
 
   /**
    * Get the alert severity
-   * @param severity
+   * @param {String} severity
    * @returns {string}
    */
   static getAlertSeverity(severity) {
-    if (severity === 'Severe') {
-      return '🔴 Allerta Rossa';
+    switch (severity) {
+      case 'Moderate':
+        return '🟡 Allerta Gialla (Criticità ordinaria)';
+      case 'Severe':
+        return '🟠 Allerta Arancione (Criticità moderata)';
+      case 'Extreme':
+        return '🔴 Allerta Rossa (Criticità elevata)';
+      default:
+        return 'Allerta non classificata';
     }
-    return '🟠 Allerta Arancione';
   }
 
   /**
@@ -34,14 +40,16 @@ Ulteriori dettagli su: ⤵️
    * @returns {string}
    */
   static eventType(event) {
-    if (event === 'hydro') {
-      return '⚠️ Rischio *idraulico*';
-    } if (event === 'geo') {
-      return '⚠️ Rischio *idrogeologico*';
-    } if (event === 'storm') {
-      return '⚠️ Rischio *temporali*';
+    switch (event) {
+      case 'hydro':
+        return '🌊️ *Rischio idraulico*';
+      case 'geo':
+        return '🌧️ *Rischio idrogeologico*';
+      case 'storm':
+        return '🌩️ *Rischio temporali*';
+      default:
+        return 'Rischio non noto';
     }
-    return 'error';
   }
 
   /**
