@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { format } = require('date-fns');
+const { it } = require('date-fns/locale');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const messageHelper = require('../utils/message.helper');
@@ -90,30 +91,31 @@ class chatService {
   static async messageGeneration(alert) {
     let message;
     if (alert.length > 0) {
-      message = `🚨 *NUOVA ALLERTA* 🚨
+      message = `🚨 *NUOVA ALLERTA MALTEMPO* 🚨
 
 Il Dipartimento della Protezione Civile ha emesso ${
   alert.length > 1 ? 'le seguenti allerte' : "un'allerta"
-} nell'area attualmente monitorata *${alert[0].location_code}* (${
-  alert[0].location_desc
-}),
+} per l'area *${alert[0].location_desc}* (${
+  alert[0].location_code
+}):
 
 `;
       alert.forEach((event) => {
         message = message.concat(`${messageHelper.eventType(event.type)}
 *${messageHelper.getAlertSeverity(event.severity)}*
-*🕒 Inizio*: ${format(new Date(event.onset), 'dd/MM/yyyy HH:mm')}
-*🕡 Termine*: ${format(new Date(event.expires), 'dd/MM/yyyy HH:mm')}
+*🕒 Inizio*: ${format(new Date(event.onset), 'dd MMMM, HH:mm', { locale: it })}
+*🕡 Termine*: ${format(new Date(event.expires), 'dd MMMM, HH:mm', { locale: it })}
 
 `);
       });
 
       message = message.concat(`
-*Ultimo aggiornamento*: ${format(
+*Ultimo aggiornamento:* ${format(
     new Date(alert[0].received),
-    'dd/MM/yyyy HH:mm',
+    'dd MMM, HH:mm',
+    { locale: it },
   )}
-Ulteriori dettagli su: ⤵️
+Per ulteriori dettagli, visita il sito: ⤵️
 `);
     } else {
       message = messageHelper.getAllGoodMessage();
