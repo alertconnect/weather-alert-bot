@@ -115,6 +115,7 @@ Il Dipartimento della Protezione Civile ha emesso ${
     'dd MMM, HH:mm',
     { locale: it },
   )}
+*Identificativo allerta*: ${alert[0].identifier}  
 Per ulteriori dettagli, visita il sito: ⤵️
 `);
     } else {

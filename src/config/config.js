@@ -20,6 +20,7 @@ const envVarsSchema = Joi.object()
     UPTIME_URL: Joi.string().description('Uptime API URL'),
     UPTIME_KEY: Joi.string().description('Uptime API key'),
     UPTIME_CHAT_TOKEN: Joi.string().description('Uptime API connect token'),
+    UPTIME_LOGS_TOKEN: Joi.string().description('Uptime API logs token'),
   })
   .unknown();
 
@@ -43,5 +44,6 @@ module.exports = {
     api: envVars.UPTIME_URL,
     key: envVars.UPTIME_KEY,
     chatToken: envVars.UPTIME_CHAT_TOKEN,
+    logsToken: envVars.UPTIME_LOGS_TOKEN,
   },
 };
