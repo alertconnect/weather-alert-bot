@@ -46,6 +46,7 @@ Contributions are welcome! If you want to contribute to this project, please fol
 | UPTIME_URL        | Uptime URL             |                              |
 | UPTIME_KEY        | Uptime auth key        |                              |
 | UPTIME_CHAT_TOKEN | Uptime token           |                              |
+| UPTIME_LOGS_TOKEN | Uptime logs token      |                              |
 
 ## Versioning
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/andreacw5/url-manager-app/releases).
